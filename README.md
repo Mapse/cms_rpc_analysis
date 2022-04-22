@@ -24,3 +24,6 @@ This repository is used to house cms rpc analysis codes. There are the following
   * Codes:
     * **config_csv_rate.py** -> Config file to provide information to the main code, create_csv_rate.py
     * **create_csv_rate.py** -> Python script to be run in a notebook.
+    * **rate_scan_analysis.ipynb** -> This notebook has three functions:
+                                      Function for plotting **Current x HV**, **Gamma Cluster Size x HV**, **Density Current x Cluster Rate** 
+                                      This  is very preliminary  version and it was used for **Kodel C**
