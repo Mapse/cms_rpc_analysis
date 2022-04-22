@@ -17,3 +17,10 @@ This repository is used to house cms rpc analysis codes. There are the following
   * Codes:
     * **resistivity_data.csv** -> CSV with data to be read and processed by resistivity_monitoring.ipynb.
     * **resistivity_monitoring.ipynb** -> Python script to be run in a notebook.
+
+* Rate Scan:
+  * Folder with codes: cms_rpc_analysis/gif++/rate_scan/
+
+  * Codes:
+    * **config_csv_rate.py** -> Config file to provide information to the main code, create_csv_rate.py
+    * **create_csv_rate.py** -> Python script to be run in a notebook.
