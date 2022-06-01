@@ -4,26 +4,32 @@ import getpass
 
 import config
 
-def natural_sort(l):
+def natural_sort(l): 
     convert = lambda text: int(text) if text.isdigit() else text.lower()
     alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
-    return sorted(l, key=alphanum_key)
+    return sorted(l, key=alphanum_key)    
 
 def output_csv(run_number, chamber):
     hvscan_path = config.hvscan_path
-    file_path = f"{hvscan_path}/{run_number:06}/ANALYSIS/{chamber}"
-    #file_path = f"{chamber}"
+    file_path = f"{hvscan_path}/{run_number:06}/ANALYSIS/{chamber}" 
     user = getpass.getuser()
     save_path = f'/var/webdcs/ANALYSIS/{user}' + config.path_chamb
-    #print(save_path)
+    
     with open(file_path + '/output.json') as json_file:
         output = json.load(json_file)
-        columns = [i for i in output if i.find('WP') > -1]
+        HV_points = natural_sort([i for i in output if i.startswith('HV')])
         data = []
-        data.append([output[column] for column in columns])
+        for idx, HV_point in enumerate(HV_points):
+            if idx == 0:
+                '''hveff = [i for i in output[HV_point] if i.startswith('hveff')]
+                imons = [i for i in output[HV_point] if (i.startswith('imon') and not i.startswith('imon_err'))]
+                eff = [i for i in output[HV_point] if i.startswith('efficiencyMuon')]
+                columns = hveff + imons + eff'''
+                columns = [i for i in output[HV_point]]
+            line = [output[HV_point][column] for column in columns]
+            data.append(line)
         df = pd.DataFrame(data, columns=columns)
-        #print(df.keys())
-        df.to_csv(f'{save_path}/data_{chamber}_{run_number:06}_WP.csv', index=False)
+        df.to_csv(f'{save_path}/data_{chamber}_{run_number:06}.csv', index=False)
 
 if __name__ == "__main__":
     import argparse
@@ -35,5 +41,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     run_number = args.run_number[0]
     chamber = args.chamber[0]
-
+    
     output_csv(run_number, chamber)
+
