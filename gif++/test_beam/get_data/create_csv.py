@@ -11,7 +11,7 @@ def natural_sort(l):
 
 def output_csv(run_number, chamber):
     hvscan_path = config.hvscan_path
-    file_path = f"{hvscan_path}/{run_number:06}/ANALYSIS/{chamber}" 
+    file_path = hvscan_path + '/' + run_number + '/ANALYSIS/' + chamber
     user = getpass.getuser()
     save_path = f'/var/webdcs/ANALYSIS/{user}' + config.path_chamb
     
@@ -29,18 +29,12 @@ def output_csv(run_number, chamber):
             line = [output[HV_point][column] for column in columns]
             data.append(line)
         df = pd.DataFrame(data, columns=columns)
-        df.to_csv(f'{save_path}/data_{chamber}_{run_number:06}.csv', index=False)
+        df.to_csv(f'{save_path}/data_{chamber}_{run_number}.csv', index=False)
 
 if __name__ == "__main__":
-    import argparse
 
-    parser = argparse.ArgumentParser(description='Output csv data')
-    parser.add_argument('run_number', metavar='run_number', type=int, nargs=1, help='run number')
-    parser.add_argument('chamber', metavar='chamber', type=str, nargs=1, help='chamber name')
-
-    args = parser.parse_args()
-    run_number = args.run_number[0]
-    chamber = args.chamber[0]
+    runs = config.runs
+    chamber = config.chamber
+    for i in runs:
     
-    output_csv(run_number, chamber)
-
+        output_csv(i, chamber)
