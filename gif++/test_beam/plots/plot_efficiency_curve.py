@@ -38,8 +38,8 @@ def plot_eff(path, file, legend, gas, fit=False, typ=None, p0=[96.6, 0.007, 12.0
         voltage = df['hveff_' + 'RE1_1_001-BOT'].astype(float)
             
         # Takes the efficiency     
-        efficiency = df['efficiencyMuon']
-        efficiency_error = df['efficiencyMuon_err']
+        efficiency = df['efficiencyMuon_corrected']
+        efficiency_error = df['efficiencyMuon_corrected_err']
         # Insert the desired values on the lists
         eff_list.append(efficiency)
         eff_error_list.append(efficiency_error)
