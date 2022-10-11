@@ -7,7 +7,7 @@ import mplhep as hep
 
 plt.style.use(hep.style.CMS)
 
-def plot_current_hv_eff(path ,file, legend, gas=None):
+def plot_current_hv_eff(path ,file, legend, chamber, gaps, gas=None):
     
     # List to pass the current for each csv
     density_current_list = []
@@ -17,44 +17,40 @@ def plot_current_hv_eff(path ,file, legend, gas=None):
         
     for f in file:
         # Read the csv file as a panda dataframe
-        df = pd.read_csv(path + f)       
+        df = pd.read_csv(path + f)  
+        
+        try:
+            eff_volt = df['hveff_' + chamber + '-' + list(gaps.keys())[0]]
+        except:
+            eff_volt = df['hveff_' + chamber + '-' + list(gaps.keys())[1]]
             
-        eff_volt = df['hveff_' + 'RE1_1_001-BOT']
-        # Takes the current
-        ibot = df['imon_RE1_1_001-BOT']
-        ibot_err = df['imon_err_RE1_1_001-BOT']/np.sqrt(ibot.size)
+        K_total = 0
+        K_total_err = 0
+        S_total = 0
+        for i in gaps:
+
+            current = df['imon_' + chamber + '-' + i]
+            current_err = df['imon_err_' + chamber + '-' + i]/np.size(current)
+            surface = gaps[i]
+
+            #I_chamber.append(current) 
+            #I_chamber_err.append(current_err/np.sqrt(current.size))
+
+            #K_chamber.append(current/area)
+            #K_chamber_err.append(current_err/area)
+
+            K_total = K_total + (current/surface) * surface
+            K_total_err = K_total_err + (current_err/surface) * surface
+
+            S_total = S_total + gaps[i]
+       
+        K_total = K_total/S_total
+        K_total_err = K_total_err/S_total
         
-        itn = df['imon_RE1_1_001-TN']
-        itn_err = df['imon_err_RE1_1_001-TN']/np.sqrt(itn.size)
-        
-        itw = df['imon_RE1_1_001-TW']
-        itw_err = df['imon_err_RE1_1_001-TW']/np.sqrt(itw.size)
-        
-        # Surfaces
-        sbot = 3150 # cm^2
-        stn = 990 # cm^2
-        stw = 1840 # m^2
-        
-        # Surface currents
-        Kbot = ibot/sbot
-        Ktn = itn/stn
-        Ktw = itw/stw
-        # Errors
-        Kbot_err = ibot_err/sbot
-        Ktn_err = itn_err/stn
-        Ktw_err = itw_err/stw
-        
-        Ktotal = (Kbot * sbot + Ktn * stn + Ktw * stw)/(sbot + stn + stw)
-        Ktotal_err = (Kbot_err * sbot + Ktn_err * stn + Ktw_err * stw)/(sbot + stn + stw)
-        
-        #print(ibot + itn + itw)
-        
-        #print(eff_volt)
-        
-        density_current_list.append(Ktotal)
-        density_current_err_list.append(Ktotal_err)
+        density_current_list.append(K_total)
+        density_current_err_list.append(K_total_err)
         hv_list.append(eff_volt/1000)
-        
+             
     # Figure and axis
     fig, ax = plt.subplots()
     # Attributes xaxis and yaxis
@@ -68,7 +64,7 @@ def plot_current_hv_eff(path ,file, legend, gas=None):
     # Loop used for plot the data for each csv file
     for (ef, er, vo, leg, col, ma) in zip(density_current_list, density_current_err_list, hv_list, legend, colors, markers):
         #ax.plot(vo, ef, marker='s', linestyle=None, linewidth=0)
-        plt.errorbar(vo, ef, yerr=er, marker='8', markersize=10, linestyle='', label=leg, mfc=col, mec=col, ecolor=col), #marker='.', linestyle=None, linewidth=0)
+        plt.errorbar(vo, ef, yerr=er, marker=ma, markersize=14, linestyle='', label=leg, mfc=col, mec=col, ecolor=col), #marker='.', linestyle=None, linewidth=0)
         ax.legend(loc='best', fontsize=18)
 
     # Xlabel
@@ -90,7 +86,7 @@ def plot_current_hv_eff(path ,file, legend, gas=None):
     plt.text(0.32, 0.89, "(ALICE, ATLAS, CMS, EPDT, LHCb/SHiP)", fontdict=hfont, style='italic',fontsize = 15, transform=plt.gcf().transFigure) # Value for on top: 0.27, 0.89, inside plot: 0.27, 0.80
     
     # Gas type
-    plt.text(0.16, 0.55, f"{gas}", fontdict=hfont, style='italic',fontsize = 14, transform=plt.gcf().transFigure) # Value for on top: 0.27, 0.89, inside plot: 0.27, 0.80
+    #plt.text(0.16, 0.55, f"{gas}", fontdict=hfont, style='italic',fontsize = 14, transform=plt.gcf().transFigure) # Value for on top: 0.27, 0.89, inside plot: 0.27, 0.80
 
 
     ### If ones would like to move the scientific notation
