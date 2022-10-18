@@ -7,11 +7,11 @@ import mplhep as hep
 
 plt.style.use(hep.style.CMS)
 
-def plot_muon_cluster_size_hv_eff(path ,file, legend, gas=None):
+def plot_muon_cluster_size_hv_eff(path ,file, legend, chamber, gaps, plot, typ=None):
     
-    # List to pass the current for each csv
-    cluster_size_list = []
-    cluster_size_error_list = []
+    # List to pass the muon cluster size for each csv
+    muon_cs_list = []
+    muon_cs_error_list = []
     # List to pass the cluster size for each csv
     hv_list = []
         
@@ -25,11 +25,14 @@ def plot_muon_cluster_size_hv_eff(path ,file, legend, gas=None):
         muon_cs_error = df['muonCLS_err']/np.sqrt(muon_cs.size)
         
         # Takes the eff voltage
-        eff_volt = df['hveff_' + 'RE1_1_001-BOT']
+        try:
+            eff_volt = df['hveff_' + chamber + '-' + list(gaps.keys())[0]]
+        except:
+            eff_volt = df['hveff_' + chamber + '-' + list(gaps.keys())[1]]
        
         # Insert the desired values on the lists
-        cluster_size_list.append(muon_cs)
-        cluster_size_error_list.append(muon_cs_error)
+        muon_cs_list.append(muon_cs)
+        muon_cs_error_list.append(muon_cs_error)
         hv_list.append(eff_volt/1000)
         
     # Figure and axis
@@ -43,9 +46,12 @@ def plot_muon_cluster_size_hv_eff(path ,file, legend, gas=None):
     markers = np.array(["1", "8", "s", "p", "*", "+", "X", "d", "P", ">", "x", "D", "H"])
     
     # Loop used for plot the data for each csv file
-    for (ef, er, vo, leg, col, ma) in zip(cluster_size_list, cluster_size_error_list, hv_list, legend, colors, markers):
+    for (ef, er, vo, leg, col, ma) in zip(muon_cs_list, muon_cs_error_list, hv_list, legend, colors, markers):
         #ax.plot(vo, ef, marker='s', linestyle=None, linewidth=0)
-        plt.errorbar(vo, ef, yerr=er, marker='8', markersize=10, linestyle='', label=leg, mfc=col), #marker='.', linestyle=None, linewidth=0)
+        if typ == None:
+            plt.errorbar(vo, ef, yerr=er, marker='8', markersize=10, linestyle='', label=leg, mfc=col, mec=col, ecolor=col), #marker='.', linestyle=None, linewidth=0)
+        elif typ == 'comp':
+            plt.errorbar(vo, ef, yerr=er, marker=ma, markersize=10, linestyle='', label=leg, mfc=col, mec=col, ecolor=col), #marker='.', linestyle=None, linewidth=0)
         ax.legend(loc='best', fontsize=16,)# bbox_to_anchor=(0.2, 0.2),)
 
     # Xlabel
@@ -58,16 +64,15 @@ def plot_muon_cluster_size_hv_eff(path ,file, legend, gas=None):
     #plt.legend('labels')
 
     # CMS format
-    hfont = {'fontname':'Helvetica'}    
-    plt.text(0.13, 0.89, "Ecogas@GIF++:", fontdict=hfont,  fontweight='bold', fontsize=15, transform=plt.gcf().transFigure) # Value for on top: 0.17, 0.89, inside plot: 0.17, 0.80
-    plt.text(0.32, 0.89, "(ALICE, ATLAS, CMS, EPDT, LHCb/SHiP)", fontdict=hfont, style='italic',fontsize = 15, transform=plt.gcf().transFigure) # Value for on top: 0.27, 0.89, inside plot: 0.27, 0.80
-
-    # Gas type
-    plt.text(0.16, 0.55, f"{gas}", fontdict=hfont, style='italic',fontsize = 14, transform=plt.gcf().transFigure) # Value for on top: 0.27, 0.89, inside plot: 0.27, 0.80
-
-    ### If ones would like to move the scientific notation
-    #t = ax.yaxis.get_offset_text()
-    #t.set_x(0.008)
+    if plot == 'rpc':
+        hfont = {'fontname':'Helvetica'}
+        plt.text(0.13, 0.89, "CMS MUON", fontdict=hfont,  fontweight='bold', transform=plt.gcf().transFigure) # Value for on top: 0.17, 0.89, inside plot: 0.17, 0.80
+        plt.text(0.37, 0.89, "Preliminary", fontdict=hfont, style='italic',fontsize = 23, transform=plt.gcf().transFigure) # Value for on top: 0.27, 0.89, inside plot: 0.27, 0.80
+        plt.text(0.77, 0.89, "GIF++", fontdict=hfont,  fontweight='bold', transform=plt.gcf().transFigure) # Value for on top: 0.17, 0.89, inside plot: 0.17, 0.80
+    elif plot == 'ecogas':
+        hfont = {'fontname':'Helvetica'}    
+        plt.text(0.13, 0.89, "Ecogas@GIF++:", fontdict=hfont,  fontweight='bold', fontsize=15, transform=plt.gcf().transFigure) # Value for on top: 0.17, 0.89, inside plot: 0.17, 0.80
+        plt.text(0.32, 0.89, "(ALICE, ATLAS, CMS, EPDT, LHCb/SHiP)", fontdict=hfont, style='italic',fontsize = 15, transform=plt.gcf().transFigure) # Value for on top: 0.27, 0.89, inside plot: 0.27, 0.80
 
     plt.grid()
     
