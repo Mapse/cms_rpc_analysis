@@ -3,15 +3,18 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+from uncertainties import ufloat
+from uncertainties.umath import *
+
 import mplhep as hep
 
 plt.style.use(hep.style.CMS)
 
-def plot_cluster_charge_hv_eff(path ,file, legend, gaps, gas=None):
+def plot_cluster_rate_hv_eff(path ,file, legend, chamber, gaps, plot, typ=None):
     
     # List to pass the cluster charge
-    cluster_charge_list = []
-    cluster_charge_error_list = []
+    cluster_rate_list = []
+    cluster_rate_error_list = []
     # List to pass the hv effective
     hv_list = []
         
@@ -24,33 +27,27 @@ def plot_cluster_charge_hv_eff(path ,file, legend, gaps, gas=None):
         for i in gap.keys():
             imon_total = imon_total + df['imon_' + i ]"""
         
-        # Takes the hit rate for each gap     
-        hit_rate = df['noiseGammaRate']
-        # Takes the hit rate error
-        hit_rate_error = df['noiseGammaRate_err']
-        # Takes the gamma cluster size
-        gamma_cluster_size = df['gammaCLS']
-        # Takes the gamma cluster size error
-        gamma_cluster_size_error = df['gammaCLS_err']
+        # Takes the hit rate and hit hat error.     
+        hit_rate_val = df['noiseGammaRate'] 
+        hit_rate_err = df['noiseGammaRate_err']/np.sqrt(hit_rate_val.size)
+        
+        # Takes the gamma cluster size and gamma cluster size error
+        gamma_cluster_size_val = df['gammaCLS'] 
+        gamma_cluster_size_err = df['gammaCLS_err']/np.sqrt(gamma_cluster_size_val.size)
+
+        # Calculates the cluster rate
+        cluster_rate_val = hit_rate_val/gamma_cluster_size_val
+        cluster_rate_err = cluster_rate_val * np.sqrt((hit_rate_err/hit_rate_val)**2 + (gamma_cluster_size_err/gamma_cluster_size_val)**2)
         
         # Takes the eff voltage
-        eff_volt = df['hveff_' + list(gaps.keys())[0]]
+        try:
+            eff_volt = df['hveff_' + chamber + '-' + list(gaps.keys())[0]]
+        except:
+            eff_volt = df['hveff_' + chamber + '-' + list(gaps.keys())[1]]
         
-        # Calculates the cluster rate
-        cluster_rate = hit_rate/gamma_cluster_size
-        # Calculates the cluster charge
-        
-        # Calculates the chluster charge
-        cluster_charge = 0
-        for i in gaps:
-            cluster_charge = cluster_charge + df['imon_' + i]/cluster_rate/gaps[i]
-            
-        #### To TEST ####
-        #cluster_charge = imon_total/cluster_rate/7000
-       
         # Insert the desired values on the lists
-        cluster_charge_list.append(cluster_charge*1e6)
-        cluster_charge_error_list.append(0)
+        cluster_rate_list.append(cluster_rate_val)
+        cluster_rate_error_list.append(cluster_rate_err)
         hv_list.append(eff_volt/1000)
         
     # Figure and axis
@@ -64,9 +61,12 @@ def plot_cluster_charge_hv_eff(path ,file, legend, gaps, gas=None):
     markers = np.array(["1", "8", "s", "p", "*", "+", "X", "d", "P", ">", "x", "D", "H"])
     
     # Loop used for plot the data for each csv file
-    for (ef, er, vo, leg, col, ma) in zip(cluster_charge_list, cluster_charge_error_list, hv_list, legend, colors, markers):
-        #ax.plot(vo, ef, marker='s', linestyle=None, linewidth=0)
-        plt.errorbar(vo, ef, yerr=er, marker='8', markersize=10, linestyle='', label=leg, mfc=col), #marker='.', linestyle=None, linewidth=0)
+    for (ef, er, vo, leg, col, ma) in zip(cluster_rate_list, cluster_rate_error_list, hv_list, legend, colors, markers):
+        
+        if typ == None:
+            plt.errorbar(vo, ef, yerr=er, marker='8', markersize=10, linestyle='', label=leg, mfc=col, mec=col, ecolor=col), #marker='.', linestyle=None, linewidth=0)
+        elif typ == 'comp':
+            plt.errorbar(vo, ef, yerr=er, marker=ma, markersize=10, linestyle='', label=leg, mfc=col, mec=col, ecolor=col), #marker='.', linestyle=None, linewidth=0)
         ax.legend(loc='best', fontsize='17')
 
     # Xlabel
@@ -75,16 +75,20 @@ def plot_cluster_charge_hv_eff(path ,file, legend, gaps, gas=None):
 
     # Ylabel
     ax.yaxis.set_label_coords(-0.09, 0.86)
-    ax.set_ylabel(r'Cluster charge $(pC)$', fontsize = 22)
+    ax.set_ylabel(r'Cluster rate $(Hz/cm^2)$', fontsize = 22)
     #plt.legend('labels')
 
     # CMS format
-    hfont = {'fontname':'Helvetica'}    
-    plt.text(0.13, 0.89, "Ecogas@GIF++:", fontdict=hfont,  fontweight='bold', fontsize=15, transform=plt.gcf().transFigure) # Value for on top: 0.17, 0.89, inside plot: 0.17, 0.80
-    plt.text(0.32, 0.89, "(ALICE, ATLAS, CMS, EPDT, LHCb/SHiP)", fontdict=hfont, style='italic',fontsize = 15, transform=plt.gcf().transFigure) # Value for on top: 0.27, 0.89, inside plot: 0.27, 0.80
+    if plot == 'rpc':
+        hfont = {'fontname':'Helvetica'}
+        plt.text(0.13, 0.89, "CMS MUON", fontdict=hfont,  fontweight='bold', transform=plt.gcf().transFigure) # Value for on top: 0.17, 0.89, inside plot: 0.17, 0.80
+        plt.text(0.37, 0.89, "Preliminary", fontdict=hfont, style='italic',fontsize = 23, transform=plt.gcf().transFigure) # Value for on top: 0.27, 0.89, inside plot: 0.27, 0.80
+        plt.text(0.77, 0.89, "GIF++", fontdict=hfont,  fontweight='bold', transform=plt.gcf().transFigure) # Value for on top: 0.17, 0.89, inside plot: 0.17, 0.80
+    elif plot == 'ecogas':
+        hfont = {'fontname':'Helvetica'}    
+        plt.text(0.13, 0.89, "Ecogas@GIF++:", fontdict=hfont,  fontweight='bold', fontsize=15, transform=plt.gcf().transFigure) # Value for on top: 0.17, 0.89, inside plot: 0.17, 0.80
+        plt.text(0.32, 0.89, "(ALICE, ATLAS, CMS, EPDT, LHCb/SHiP)", fontdict=hfont, style='italic',fontsize = 15, transform=plt.gcf().transFigure) # Value for on top: 0.27, 0.89, inside plot: 0.27, 0.80
 
-    # Gas type
-    plt.text(0.16, 0.55, f"{gas}", fontdict=hfont, style='italic',fontsize = 14, transform=plt.gcf().transFigure) # Value for on top: 0.27, 0.89, inside plot: 0.27, 0.80
 
     ### If ones would like to move the scientific notation
     #t = ax.yaxis.get_offset_text()
