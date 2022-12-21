@@ -7,7 +7,7 @@ import mplhep as hep
 
 plt.style.use(hep.style.CMS)
 
-def plot_current_hv_eff(path ,file, legend, chamber, gaps, gas=None):
+def plot_current_hv_eff(path ,file, legend, chamber, gaps, plot, gas=None):
     
     # List to pass the current for each csv
     density_current_list = []
@@ -17,7 +17,7 @@ def plot_current_hv_eff(path ,file, legend, chamber, gaps, gas=None):
         
     for f in file:
         # Read the csv file as a panda dataframe
-        df = pd.read_csv(path + f)  
+        df = pd.read_csv(path + f)    
         
         try:
             eff_volt = df['hveff_' + chamber + '-' + list(gaps.keys())[0]]
@@ -50,7 +50,7 @@ def plot_current_hv_eff(path ,file, legend, chamber, gaps, gas=None):
         density_current_list.append(K_total)
         density_current_err_list.append(K_total_err)
         hv_list.append(eff_volt/1000)
-             
+        
     # Figure and axis
     fig, ax = plt.subplots()
     # Attributes xaxis and yaxis
@@ -81,9 +81,15 @@ def plot_current_hv_eff(path ,file, legend, chamber, gaps, gas=None):
     #plt.legend('labels')
 
     # CMS format
-    hfont = {'fontname':'Helvetica'}    
-    plt.text(0.13, 0.89, "Ecogas@GIF++:", fontdict=hfont,  fontweight='bold', fontsize=15, transform=plt.gcf().transFigure) # Value for on top: 0.17, 0.89, inside plot: 0.17, 0.80
-    plt.text(0.32, 0.89, "(ALICE, ATLAS, CMS, EPDT, LHCb/SHiP)", fontdict=hfont, style='italic',fontsize = 15, transform=plt.gcf().transFigure) # Value for on top: 0.27, 0.89, inside plot: 0.27, 0.80
+    if plot == 'rpc':
+        hfont = {'fontname':'Helvetica'}
+        plt.text(0.13, 0.89, "CMS MUON", fontdict=hfont,  fontweight='bold', transform=plt.gcf().transFigure) # Value for on top: 0.17, 0.89, inside plot: 0.17, 0.80
+        plt.text(0.37, 0.89, "Preliminary", fontdict=hfont, style='italic',fontsize = 23, transform=plt.gcf().transFigure) # Value for on top: 0.27, 0.89, inside plot: 0.27, 0.80
+        plt.text(0.77, 0.89, "GIF++", fontdict=hfont,  fontweight='bold', transform=plt.gcf().transFigure) # Value for on top: 0.17, 0.89, inside plot: 0.17, 0.80
+    elif plot == 'ecogas':
+        hfont = {'fontname':'Helvetica'}    
+        plt.text(0.13, 0.89, "Ecogas@GIF++:", fontdict=hfont,  fontweight='bold', fontsize=15, transform=plt.gcf().transFigure) # Value for on top: 0.17, 0.89, inside plot: 0.17, 0.80
+        plt.text(0.32, 0.89, "(ALICE, ATLAS, CMS, EPDT, LHCb/SHiP)", fontdict=hfont, style='italic',fontsize = 15, transform=plt.gcf().transFigure) # Value for on top: 0.27, 0.89, inside plot: 0.27, 0.80
     
     # Gas type
     #plt.text(0.16, 0.55, f"{gas}", fontdict=hfont, style='italic',fontsize = 14, transform=plt.gcf().transFigure) # Value for on top: 0.27, 0.89, inside plot: 0.27, 0.80
